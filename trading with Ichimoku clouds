@@ -1,0 +1,42 @@
+//@version=6
+indicator(title="Linear Regression with Ichimoku", shorttitle="LR Ichimoku", overlay=true)
+
+// 📌 Linear Regression Parameters
+length = input.int(20, title="Period Length (Regression)")
+
+// 📌 Ichimoku Parameters
+tenkan = input.int(9, title="Tenkan-sen")
+kijun = input.int(26, title="Kijun-sen")
+senkouB = input.int(52, title="Senkou Span B")
+
+// 📈 Linear Regression Calculation
+linreg = ta.linreg(close, length, 0)
+
+// 🟢🔴 Ichimoku Lines Calculation
+tenkan_sen = (ta.highest(high, tenkan) + ta.lowest(low, tenkan)) / 2
+kijun_sen = (ta.highest(high, kijun) + ta.lowest(low, kijun)) / 2
+senkou_span_a = (tenkan_sen + kijun_sen) / 2
+senkou_span_b = (ta.highest(high, senkouB) + ta.lowest(low, senkouB)) / 2
+
+// 🎨 Display Linear Regression
+plot(linreg, color=#b6bdb4, linewidth=2, title="Linear Regression")
+
+// 🎨 Display Ichimoku Lines with New Colors
+plot(tenkan_sen, color=color.purple, title="Tenkan-sen", linewidth=2)
+plot(kijun_sen, color=color.red, title="Kijun-sen", linewidth=2)
+plot(senkou_span_a, color=color.yellow, title="Senkou Span A", offset=26, linewidth=2)
+plot(senkou_span_b, color=color.blue, title="Senkou Span B", offset=26, linewidth=2)
+
+// 🎭 Ichimoku Cloud Filling with Transparency
+colCloudBullish = color.new(color.green, 75)   // Bright green for bullish trend
+colCloudBearish = color.new(color.red, 75)     // Bright red for bearish trend
+
+fill(plot(senkou_span_a, offset=26), plot(senkou_span_b, offset=26), color=senkou_span_a > senkou_span_b ? colCloudBullish : colCloudBearish)
+
+// 📊 Simple Trading Strategy with Visual Signals
+longCondition = close > linreg and close > tenkan_sen and close > kijun_sen and close > senkou_span_a and close > senkou_span_b
+plotshape(longCondition, style=shape.triangleup, color=color.blue, location=location.belowbar, size=size.small, title="Buy Signal")
+
+// 🔻 Sell when the price is below regression and Ichimoku is bearish
+shortCondition = close < linreg and close < tenkan_sen and close < kijun_sen and close < senkou_span_a and close < senkou_span_b
+plotshape(shortCondition, style=shape.triangledown, color=color.orange, location=location.abovebar, size=size.small, title="Sell Signal")
